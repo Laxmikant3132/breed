@@ -25,7 +25,8 @@ const AnalyzePage: React.FC = () => {
       const formData = new FormData();
       formData.append('images', file); // Currently only sending 1, but backend supports 1-5
 
-      const response = await fetch('http://localhost:8080/api/predict', {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://breed-2.onrender.com';
+      const response = await fetch(`${API_URL}/api/predict`, {
         method: 'POST',
         body: formData,
       });
