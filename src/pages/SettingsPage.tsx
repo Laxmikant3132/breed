@@ -20,6 +20,17 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 
+interface SettingItem {
+  icon: React.ElementType;
+  name: string;
+  description: string;
+  toggle?: boolean;
+  value?: boolean;
+  badge?: string;
+  onToggle?: () => void;
+  onClick?: () => void;
+}
+
 const SettingsPage: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
@@ -34,7 +45,7 @@ const SettingsPage: React.FC = () => {
     { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' }
   ];
 
-  const sections = [
+  const sections: { title: string; items: SettingItem[] }[] = [
     {
       title: t('settings.general'),
       items: [
@@ -144,7 +155,7 @@ const SettingsPage: React.FC = () => {
                 <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-premium overflow-hidden">
                     {section.items.map((item, i) => {
                     const isToggle = !!item.toggle;
-                    const ClickableWrapper = isToggle ? 'div' : 'button';
+
                     
                     return (
                       <div 

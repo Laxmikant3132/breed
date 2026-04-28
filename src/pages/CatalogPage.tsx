@@ -10,7 +10,7 @@ import {
   List,
   Info
 } from 'lucide-react';
-import type { BreedInfo } from '../types';
+
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../utils/helpers';
 import { useLanguage } from '../context/LanguageContext';

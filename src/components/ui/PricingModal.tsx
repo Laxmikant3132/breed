@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Zap, Crown, Star } from 'lucide-react';
-import { useLanguage } from '../../context/LanguageContext';
+
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -9,7 +9,7 @@ interface PricingModalProps {
 }
 
 const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) => {
-  const { t } = useLanguage();
+
 
   const plans = [
     {
