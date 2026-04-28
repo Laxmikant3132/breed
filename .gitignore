@@ -1,0 +1,57 @@
+# Logs
+logs/
+backend/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies
+node_modules/
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+__pycache__/
+
+# Build folders
+dist/
+dist-ssr/
+build/
+
+# Python cache
+*.pyc
+*.pyo
+*.pyd
+
+# Environment files
+.env
+.env.*
+*.local
+backend/.env
+
+# Editor / IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+node_modules/
+dist/
+
+backend/buffalo/
+backend/buffalo
+backend/logs/
+*.log
+.env
+backend/.env

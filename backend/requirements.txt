@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+# tensorflow>=2.13 (Not yet available for Python 3.14)
+opencv-python
+numpy
+pillow
+python-multipart
+pydantic>=2
+scikit-image
+scipy
+imutils
+pydantic-settings
+python-dotenv
+scikit-learn
+anthropic
+google-genai
+ImageHash
