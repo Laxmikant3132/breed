@@ -11,7 +11,7 @@ import {
   Info
 } from 'lucide-react';
 import type { BreedInfo } from '../types';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../utils/helpers';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -19,14 +19,28 @@ import { breeds } from '../data/breeds';
 
 const CatalogPage: React.FC = () => {
   const { t } = useLanguage();
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState('All');
+  const [milkRange, setMilkRange] = useState<number>(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'All' | 'Cattle' | 'Buffalo'>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  // Extract unique regions from data
+  const regions = ['All', ...new Set(breeds.map(b => b.region.split(' ')[0]))];
 
   const filteredBreeds = breeds.filter(breed => {
     const matchesSearch = breed.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = activeFilter === 'All' || breed.type === activeFilter;
-    return matchesSearch && matchesFilter;
+    
+    // Advanced filtering logic
+    const matchesRegion = selectedRegion === 'All' || breed.region.includes(selectedRegion);
+    
+    // Parse milk production (extracting first number for simple filtering)
+    const milkProd = parseInt(breed.milkProduction.replace(/[^0-9]/g, '').substring(0, 4)) || 0;
+    const matchesMilk = milkRange === 0 || milkProd >= milkRange;
+
+    return matchesSearch && matchesFilter && matchesRegion && matchesMilk;
   });
 
   return (
@@ -107,10 +121,77 @@ const CatalogPage: React.FC = () => {
                 </div>
 
                 <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
-                  <button className="w-full flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-sm font-bold text-slate-600 dark:text-slate-400">
+                  <button 
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className={cn(
+                      "w-full flex items-center justify-between p-4 rounded-2xl text-sm font-black transition-all",
+                      showAdvanced 
+                        ? "bg-primary-50 dark:bg-primary-900/30 text-primary-600 border border-primary-100 dark:border-primary-800" 
+                        : "bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400"
+                    )}
+                  >
                     <span>{t('catalog.advanced_filters')}</span>
-                    <SlidersHorizontal className="h-4 w-4" />
+                    <SlidersHorizontal className={cn("h-4 w-4 transition-transform", showAdvanced && "rotate-180")} />
                   </button>
+
+                  <AnimatePresence>
+                    {showAdvanced && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pt-6 space-y-6">
+                          <div className="space-y-3">
+                            <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Region</label>
+                            <select 
+                              value={selectedRegion}
+                              onChange={(e) => setSelectedRegion(e.target.value)}
+                              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-xl text-sm font-bold dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                            >
+                              {regions.map(r => (
+                                <option key={r} value={r}>{r}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center px-1">
+                              <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Min Milk Yield</label>
+                              <span className="text-xs font-black text-primary-600">{milkRange}+ kg</span>
+                            </div>
+                            <input 
+                              type="range"
+                              min="0"
+                              max="2000"
+                              step="500"
+                              value={milkRange}
+                              onChange={(e) => setMilkRange(parseInt(e.target.value))}
+                              className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                            />
+                            <div className="flex justify-between text-[8px] font-black text-slate-400 uppercase tracking-tighter px-1">
+                              <span>Low</span>
+                              <span>Medium</span>
+                              <span>High</span>
+                            </div>
+                          </div>
+
+                          <button 
+                            onClick={() => {
+                              setSelectedRegion('All');
+                              setMilkRange(0);
+                              setActiveFilter('All');
+                              setSearchTerm('');
+                            }}
+                            className="w-full py-2 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors"
+                          >
+                            Reset All Filters
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
             </div>
