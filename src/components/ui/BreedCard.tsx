@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Droplets, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import type { BreedInfo } from '../../types';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -10,12 +11,30 @@ interface BreedCardProps {
 
 const BreedCard: React.FC<BreedCardProps> = ({ breed }) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden shadow-premium border border-slate-100 dark:border-slate-800 group hover:-translate-y-2 transition-all duration-300"
+      onClick={() => navigate('/results', { 
+        state: { 
+          analysisResult: {
+            breedName: breed.name,
+            confidence: 100,
+            category: breed.type,
+            imageUrl: breed.image,
+            breedDetails: {
+              price: breed.price,
+              milkYield: breed.milkProduction,
+              state: breed.region,
+              advantages: breed.advantages,
+              disadvantages: breed.disadvantages
+            }
+          }
+        } 
+      })}
+      className="bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden shadow-premium border border-slate-100 dark:border-slate-800 group hover:-translate-y-2 transition-all duration-300 cursor-pointer"
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <img 
@@ -29,7 +48,9 @@ const BreedCard: React.FC<BreedCardProps> = ({ breed }) => {
           </span>
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
-          <button className="w-full py-3 bg-white text-primary-700 font-bold rounded-xl text-sm flex items-center justify-center gap-2">
+          <button 
+            className="w-full py-3 bg-white text-primary-700 font-bold rounded-xl text-sm flex items-center justify-center gap-2 shadow-xl"
+          >
             {t('catalog.view_details')} <ArrowRight className="h-4 w-4" />
           </button>
         </div>

@@ -10,6 +10,7 @@ export interface BreedInfo {
   name: string;
   scientificName?: string;
   type: 'Cattle' | 'Buffalo';
+  price?: string;
   milkProduction: string;
   region: string;
   strengths: string[];

@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import Sidebar from '../components/layout/Sidebar';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 import { motion } from 'framer-motion';
 import { 
   ShieldCheck, 
@@ -16,15 +18,20 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../utils/helpers';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 const ResultsPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { language, t } = useLanguage();
+  const { theme } = useTheme();
+  const reportRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   // Get data from navigation state or use mock as fallback
   const analysisResult = location.state?.analysisResult;
   const imagePreview = location.state?.imagePreview;
+  const isFromCatalog = analysisResult?.confidence === 100 && !imagePreview;
 
   // Helper for dynamic data translation
   const translateData = (text: string) => {
@@ -224,31 +231,92 @@ const ResultsPage: React.FC = () => {
     ]
   };
 
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `BreedAI Report: ${displayData.name}`,
+          text: `Check out this AI-generated breed report for ${displayData.name} on BreedAI.`,
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (err) {
+      console.error('Error sharing:', err);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!reportRef.current) return;
+    
+    try {
+      setIsDownloading(true);
+      const element = reportRef.current;
+      
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: theme === 'dark' ? '#020617' : '#f8fafc',
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      });
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`BreedAI_Report_${displayData.name.replace(/\s+/g, '_')}.pdf`);
+    } catch (err) {
+      console.error('PDF Generation Error:', err);
+      window.print();
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
-      <Sidebar />
+      <div className="no-print">
+        <Sidebar />
+      </div>
       
       <main className="flex-1 p-8 lg:p-12 overflow-y-auto">
-        <header className="flex items-center justify-between mb-10">
+        <header className="flex items-center justify-between mb-10 no-print">
           <button 
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-slate-500 hover:text-primary-600 transition-colors font-semibold"
           >
             <ChevronLeft className="h-5 w-5" />
-            {t('results.back_to_dashboard')}
+            {isFromCatalog ? t('analyze.back_to_home') : t('results.back_to_dashboard')}
           </button>
           
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors">
+            <button 
+              onClick={handleShare}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl shadow-sm text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors"
+            >
               <Share2 className="h-4 w-4" />
               {t('results.share_report')}
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl shadow-lg shadow-primary-500/20 text-sm font-bold hover:bg-primary-700 transition-colors">
-              <Download className="h-4 w-4" />
-              {t('results.download_pdf')}
+            <button 
+              onClick={handleDownloadPDF}
+              disabled={isDownloading}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-xl shadow-lg shadow-primary-500/20 text-sm font-bold hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className={cn("h-4 w-4", isDownloading && "animate-bounce")} />
+              {isDownloading ? "Generating..." : t('results.download_pdf')}
             </button>
           </div>
         </header>
+
+        <div ref={reportRef} className="p-4 rounded-[3rem]">
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
           {/* Left Column: Image & Health */}
@@ -269,8 +337,12 @@ const ResultsPage: React.FC = () => {
               </div>
               <div className="p-8">
                 <div className="flex items-center justify-between mb-6">
-                   <h3 className="text-xl font-bold dark:text-white">{t('results.analysis_confidence')}</h3>
-                   <span className="text-3xl font-black text-primary-600">{displayData.confidence}%</span>
+                   <h3 className="text-xl font-bold dark:text-white">
+                     {isFromCatalog ? t('results.verified_result') : t('results.analysis_confidence')}
+                   </h3>
+                   <span className="text-3xl font-black text-primary-600">
+                     {isFromCatalog ? "100%" : `${displayData.confidence}%`}
+                   </span>
                 </div>
                 <div className="h-3 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                    <motion.div 
@@ -410,23 +482,25 @@ const ResultsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-10 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-8">
-                <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400">
-                    <HelpCircle className="h-8 w-8" />
+              {!isFromCatalog && (
+                <div className="pt-10 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-8">
+                  <div className="flex items-center gap-4">
+                    <div className="h-14 w-14 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center text-slate-400">
+                      <HelpCircle className="h-8 w-8" />
+                    </div>
+                    <div>
+                      <h5 className="font-bold dark:text-white">{t('results.need_more')}</h5>
+                      <p className="text-sm text-slate-500">{t('results.explore')}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="font-bold dark:text-white">{t('results.need_more')}</h5>
-                    <p className="text-sm text-slate-500">{t('results.explore')}</p>
-                  </div>
+                  <button 
+                    onClick={() => navigate('/dashboard/catalog')}
+                    className="btn-secondary py-3 px-8 flex items-center gap-2 dark:bg-slate-800 dark:text-white dark:border-slate-700 w-full md:w-auto"
+                  >
+                    {t('results.learn_more')} <ArrowRight className="h-4 w-4" />
+                  </button>
                 </div>
-                <button 
-                  onClick={() => navigate('/dashboard/catalog')}
-                  className="btn-secondary py-3 px-8 flex items-center gap-2 dark:bg-slate-800 dark:text-white dark:border-slate-700 w-full md:w-auto"
-                >
-                  {t('results.learn_more')} <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
+              )}
             </motion.div>
 
             {/* Quick Tips */}
@@ -446,6 +520,7 @@ const ResultsPage: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
       </main>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/layout/Sidebar';
+import PricingModal from '../components/ui/PricingModal';
 import { useAuth } from '../context/AuthContext';
 import { 
   History, 
@@ -23,6 +24,7 @@ const DashboardPage: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
   const [recentReports, setRecentReports] = useState<any[]>([]);
   const [showLangDropdown, setShowLangDropdown] = useState(false);
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
 
   useEffect(() => {
     // Mock recent reports
@@ -203,7 +205,10 @@ const DashboardPage: React.FC = () => {
                 <p className="text-primary-200 text-sm mb-6 leading-relaxed">
                   {t('dashboard.premium_desc')}
                 </p>
-                <button className="w-full bg-white text-primary-900 font-bold py-3 rounded-xl hover:bg-primary-50 transition-colors shadow-xl">
+                <button 
+                  onClick={() => setIsPricingOpen(true)}
+                  className="w-full bg-white text-primary-900 font-bold py-3 rounded-xl hover:bg-primary-50 transition-colors shadow-xl"
+                >
                   {t('dashboard.upgrade_now')}
                 </button>
               </div>
@@ -213,6 +218,11 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
       </main>
+
+      <PricingModal 
+        isOpen={isPricingOpen} 
+        onClose={() => setIsPricingOpen(false)} 
+      />
     </div>
   );
 };

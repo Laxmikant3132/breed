@@ -15,86 +15,13 @@ import { motion } from 'framer-motion';
 import { cn } from '../utils/helpers';
 import { useLanguage } from '../context/LanguageContext';
 
+import { breeds } from '../data/breeds';
+
 const CatalogPage: React.FC = () => {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'All' | 'Cattle' | 'Buffalo'>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-
-  const breeds: BreedInfo[] = [
-    {
-      id: '1',
-      name: 'Gir Cattle',
-      type: 'Cattle',
-      milkProduction: '1500 - 2500 kg/lactation',
-      region: 'Gujarat (Saurashtra)',
-      strengths: ['Heat Tolerance', 'Disease Resistance', 'High Milk Fat'],
-      useCases: ['Commercial Dairy', 'Breeding', 'Drought Power'],
-      description: 'Famous for its tolerance to tropical diseases and high heat.',
-      image: 'https://images.unsplash.com/photo-1546445317-29f4545e9d53?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-      advantages: [], disadvantages: []
-    },
-    {
-      id: '2',
-      name: 'Murrah Buffalo',
-      type: 'Buffalo',
-      milkProduction: '2000 - 3000 kg/lactation',
-      region: 'Haryana & Punjab',
-      strengths: ['High Fat Content', 'Adaptability', 'Draft Power'],
-      useCases: ['Premium Milk Production', 'Ghee Manufacturing'],
-      description: 'The most popular buffalo breed in India for dairy.',
-      image: '/breeds/murrah.png',
-      advantages: [], disadvantages: []
-    },
-    {
-      id: '3',
-      name: 'Sahiwal Cattle',
-      type: 'Cattle',
-      milkProduction: '2000 - 3000 kg/lactation',
-      region: 'Punjab & Rajasthan',
-      strengths: ['High Milk Yield', 'Ticks Resistance', 'Longevity'],
-      useCases: ['Large Scale Dairy', 'Household Milk'],
-      description: 'One of the best dairy breeds in India.',
-      image: 'https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80',
-      advantages: [], disadvantages: []
-    },
-    {
-      id: '4',
-      name: 'Red Sindhi',
-      type: 'Cattle',
-      milkProduction: '1700 - 2200 kg/lactation',
-      region: 'Sindh (orig.), across India',
-      strengths: ['Hardiness', 'Drought Resistance', 'Consistent Yield'],
-      useCases: ['Drought Farming', 'Dairy'],
-      description: 'Very hardy and adaptable to different climatic conditions.',
-      image: '/breeds/red_sindhi.png',
-      advantages: [], disadvantages: []
-    },
-    {
-      id: '5',
-      name: 'Jaffrabadi Buffalo',
-      type: 'Buffalo',
-      milkProduction: '1800 - 2500 kg/lactation',
-      region: 'Gujarat (Saurashtra)',
-      strengths: ['Heavy Body', 'High Fat %', 'Heat Tolerance'],
-      useCases: ['Industrial Dairy', 'Ghee'],
-      description: 'Known for being one of the largest buffalo breeds.',
-      image: '/breeds/jaffrabadi.png',
-      advantages: [], disadvantages: []
-    },
-    {
-      id: '6',
-      name: 'Tharparkar',
-      type: 'Cattle',
-      milkProduction: '1800 - 2200 kg/lactation',
-      region: 'Rajasthan (Thar Desert)',
-      strengths: ['Arid Survival', 'Low Maintenance', 'Dual Purpose'],
-      useCases: ['Desert Farming', 'Low Input Dairy'],
-      description: 'Excellent dual-purpose breed for arid regions.',
-      image: '/breeds/tharparkar.png',
-      advantages: [], disadvantages: []
-    }
-  ];
 
   const filteredBreeds = breeds.filter(breed => {
     const matchesSearch = breed.name.toLowerCase().includes(searchTerm.toLowerCase());
