@@ -20,6 +20,8 @@ const ReportsPage: React.FC = () => {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [reports, setReports] = useState<any[]>([]);
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Healthy' | 'At Risk'>('All');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     // Mock reports data
@@ -32,9 +34,34 @@ const ReportsPage: React.FC = () => {
     ]);
   }, []);
 
-  const filteredReports = reports.filter(report => 
-    report.breedName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredReports = reports.filter(report => {
+    const matchesSearch = report.breedName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'All' || report.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleExport = () => {
+    const headers = ['ID', 'Breed Name', 'Confidence', 'Timestamp', 'Status'];
+    const csvData = reports.map(r => [
+      r.id, 
+      r.breedName, 
+      `${r.confidence}%`, 
+      r.timestamp, 
+      r.status
+    ].join(','));
+    
+    const csvContent = [headers.join(','), ...csvData].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `BreedAI_Reports_Export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
@@ -50,7 +77,7 @@ const ReportsPage: React.FC = () => {
         </header>
 
         {/* Filter Bar */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
+        <div className="flex flex-col md:flex-row gap-4 mb-8 relative">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
             <input 
@@ -61,11 +88,55 @@ const ReportsPage: React.FC = () => {
               className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 shadow-sm transition-all"
             />
           </div>
-          <button className="px-6 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl flex items-center justify-center gap-2 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-50 transition-colors shadow-sm">
-            <Filter className="h-5 w-5" />
-            {t('reports.filters')}
-          </button>
-          <button className="px-6 py-4 bg-primary-600 text-white rounded-2xl flex items-center justify-center gap-2 font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20">
+          
+          <div className="relative">
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className={cn(
+                "px-6 py-4 bg-white dark:bg-slate-900 border rounded-2xl flex items-center justify-center gap-2 font-bold transition-all shadow-sm",
+                showFilters ? "border-primary-500 text-primary-600" : "border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50"
+              )}
+            >
+              <Filter className="h-5 w-5" />
+              {t('reports.filters')}
+            </button>
+
+            {showFilters && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                className="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 p-3 z-50"
+              >
+                <div className="p-3">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-2">Status Filter</p>
+                  <div className="space-y-1">
+                    {['All', 'Healthy', 'At Risk'].map((status) => (
+                      <button
+                        key={status}
+                        onClick={() => {
+                          setStatusFilter(status as any);
+                          setShowFilters(false);
+                        }}
+                        className={cn(
+                          "w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-colors",
+                          statusFilter === status 
+                            ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600" 
+                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+                        )}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          <button 
+            onClick={handleExport}
+            className="px-6 py-4 bg-primary-600 text-white rounded-2xl flex items-center justify-center gap-2 font-bold hover:bg-primary-700 transition-all shadow-lg shadow-primary-500/20 active:scale-95"
+          >
             <Download className="h-5 w-5" />
             {t('reports.export_all')}
           </button>
